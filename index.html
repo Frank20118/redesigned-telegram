@@ -1,98 +1,160 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <title>Имбовый генератор ников</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <style>
-    body {
-      margin: 0;
-      min-height: 100vh;
-      background: radial-gradient(circle at top, #1a1a2e, #0f0f14);
-      color: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: Inter, system-ui;
-    }
-    .app {
-      max-width: 420px;
-      width: 100%;
-      padding: 24px;
-      background: rgba(255,255,255,0.06);
-      border-radius: 20px;
-      text-align: center;
-    }
-    button {
-      width: 100%;
-      padding: 14px;
-      margin-top: 10px;
-      border-radius: 14px;
-      border: none;
-      background: linear-gradient(135deg,#ff4d6d,#ff7a18);
-      color: white;
-      font-weight: 700;
-      cursor: pointer;
-    }
-    .tg {
-      background: linear-gradient(135deg,#2AABEE,#229ED9);
-      display: none;
-    }
-    .result {
-      font-size: 20px;
-      font-weight: 700;
-      margin: 20px 0;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Рулетка имбовых ников</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body {
+  margin:0;
+  background:#0f0f14;
+  color:#fff;
+  font-family:Inter,system-ui;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  min-height:100vh;
+}
+.app {
+  width:360px;
+  text-align:center;
+}
+.wheel-wrap {
+  position:relative;
+  width:260px;
+  height:260px;
+  margin:20px auto;
+}
+.wheel {
+  width:100%;
+  height:100%;
+  border-radius:50%;
+  background:conic-gradient(
+    #ff4d6d 0deg 60deg,
+    #fca311 60deg 120deg,
+    #2ec4b6 120deg 180deg,
+    #6a4c93 180deg 240deg,
+    #ffbe0b 240deg 300deg,
+    #ff4d6d 300deg 360deg
+  );
+  transition:transform 4s cubic-bezier(.17,.67,.12,.99);
+}
+.pointer {
+  position:absolute;
+  top:-12px;
+  left:50%;
+  transform:translateX(-50%);
+  border-left:12px solid transparent;
+  border-right:12px solid transparent;
+  border-bottom:20px solid red;
+}
+button {
+  width:100%;
+  padding:14px;
+  margin-top:10px;
+  border:none;
+  border-radius:14px;
+  font-weight:700;
+  cursor:pointer;
+}
+.spin {
+  background:#ff4d6d;
+  color:#fff;
+}
+.send {
+  background:#229ED9;
+  color:#fff;
+  display:none;
+}
+.result {
+  font-size:20px;
+  margin-top:15px;
+  min-height:28px;
+}
+.error {
+  color:#ff6b6b;
+  font-size:14px;
+}
+</style>
 </head>
+
 <body>
-
 <div class="app">
-  <h1>🎡 Генератор имбовых ников</h1>
-  <p>Крути и отправляй в TG</p>
+  <h2>🎡 РУЛЕТКА НИКОВ</h2>
 
-  <div class="result" id="result">—</div>
+  <div class="wheel-wrap">
+    <div class="pointer"></div>
+    <div id="wheel" class="wheel"></div>
+  </div>
 
-  <button id="spin">КРУТИТЬ</button>
-  <button id="send" class="tg">📤 ОТПРАВИТЬ В TG</button>
+  <div id="result" class="result">—</div>
+  <div id="error" class="error"></div>
+
+  <button class="spin" id="spin">КРУТИТЬ</button>
+  <button class="send" id="send">📤 ОТПРАВИТЬ В TG</button>
 </div>
 
 <script>
-  const nicks = [
-    "аналитек титек",
-    "перфоратор олега 3000",
-    "диван с феечкой винкс",
-    "диванный эксперт ультра",
-    "шаман вайфая",
-    "повелитель кнопки F5",
-    "батя интернета"
-  ];
+const nicks = [
+  "аналитек титек",
+  "перфоратор олега 3000",
+  "диван с феечкой винкс",
+  "шаман вайфая",
+  "диванный эксперт ультра",
+  "батя интернета"
+];
 
-  const result = document.getElementById("result");
-  const spinBtn = document.getElementById("spin");
-  const sendBtn = document.getElementById("send");
+const wheel = document.getElementById("wheel");
+const result = document.getElementById("result");
+const sendBtn = document.getElementById("send");
+const errorBox = document.getElementById("error");
 
-  let currentNick = "";
+let angle = 0;
+let currentNick = "";
 
-  spinBtn.onclick = () => {
-    currentNick = nicks[Math.floor(Math.random() * nicks.length)];
+document.getElementById("spin").onclick = () => {
+  errorBox.textContent = "";
+  sendBtn.style.display = "none";
+
+  const index = Math.floor(Math.random() * nicks.length);
+  currentNick = nicks[index];
+
+  const sector = 360 / nicks.length;
+  const target = 360 * 5 + index * sector + sector / 2;
+
+  angle += target;
+  wheel.style.transform = `rotate(${angle}deg)`;
+
+  setTimeout(() => {
     result.textContent = currentNick;
     sendBtn.style.display = "block";
-  };
+  }, 4000);
+};
 
-  sendBtn.onclick = async () => {
-    sendBtn.textContent = "Отправка...";
-    sendBtn.disabled = true;
+sendBtn.onclick = async () => {
+  sendBtn.disabled = true;
+  sendBtn.textContent = "Отправка...";
 
-    await fetch("/api/send", {
+  try {
+    const res = await fetch("/api/send", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ nick: currentNick })
     });
 
-    sendBtn.textContent = "✅ Отправлено";
-  };
-</script>
+    const data = await res.json();
 
+    if (!data.ok) throw new Error(JSON.stringify(data));
+
+    sendBtn.textContent = "✅ Отправлено";
+
+  } catch (e) {
+    errorBox.textContent = "❌ TG НЕ РАБОТАЕТ: " + e.message;
+    sendBtn.textContent = "📤 ОТПРАВИТЬ В TG";
+    sendBtn.disabled = false;
+  }
+};
+</script>
 </body>
 </html>
