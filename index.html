@@ -1,16 +1,16 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8" />
 <title>Рулетка имбовых ников</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
 <style>
 body {
   margin: 0;
   background: #0f0f14;
   color: #fff;
-  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -61,7 +61,6 @@ button {
   border: none;
   border-radius: 14px;
   font-weight: 700;
-  font-size: 15px;
   cursor: pointer;
 }
 
@@ -85,7 +84,6 @@ button {
 .error {
   color: #ff6b6b;
   font-size: 14px;
-  margin-top: 8px;
 }
 </style>
 </head>
@@ -96,13 +94,13 @@ button {
 
   <div class="wheel-wrap">
     <div class="pointer"></div>
-    <div id="wheel" class="wheel"></div>
+    <div class="wheel" id="wheel"></div>
   </div>
 
-  <div id="result" class="result">—</div>
-  <div id="error" class="error"></div>
+  <div class="result" id="result">—</div>
+  <div class="error" id="error"></div>
 
-  <button class="spin" id="spin">🎰 КРУТИТЬ</button>
+  <button class="spin" id="spin">КРУТИТЬ</button>
   <button class="send" id="send">📤 ОТПРАВИТЬ В TG</button>
 </div>
 
@@ -117,86 +115,37 @@ const nicks = [
 ];
 
 const wheel = document.getElementById("wheel");
-const result = document.getElementById("result");
+const spinBtn = document.getElementById("spin");
 const sendBtn = document.getElementById("send");
+const result = document.getElementById("result");
 const errorBox = document.getElementById("error");
 
 let angle = 0;
 let currentNick = "";
 
-document.getElementById("spin").onclick = () => {
+spinBtn.addEventListener("click", () => {
   errorBox.textContent = "";
   sendBtn.style.display = "none";
-  sendBtn.disabled = false;
-  sendBtn.textContent = "📤 ОТПРАВИТЬ В TG";
 
   const index = Math.floor(Math.random() * nicks.length);
   currentNick = nicks[index];
 
   const sector = 360 / nicks.length;
-  const target = 360 * 5 + index * sector + sector / 2;
+  const rotateTo = 360 * 5 + index * sector + sector / 2;
 
-  angle += target;
+  angle += rotateTo;
   wheel.style.transform = `rotate(${angle}deg)`;
 
   setTimeout(() => {
     result.textContent = currentNick;
     sendBtn.style.display = "block";
   }, 4000);
-};
+});
 
-sendBtn.onclick = async () => {
-  if (!currentNick) return;
-
-  sendBtn.disabled = true;
-  sendBtn.textContent = "Отправка...";
-
-  try {
-    const res = await fetch("/api/send", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        text: "🎰 Выпал ник:\n" + currentNick
-      })
-    });
-
-    const data = await res.json();
-
-    if (!data.ok) {
-      throw new Error(data.description || "TG error");
-    }
-
-    sendBtn.onclick = async () => {
-  if (!currentNick) {
-    errorBox.textContent = "❌ Сначала крутаните рулетку";
-    return;
-  }
-
-  sendBtn.disabled = true;
-  sendBtn.textContent = "Отправка...";
-
-  try {
-    const res = await fetch("/api/send", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ nick: currentNick })
-    });
-
-    const data = await res.json();
-
-    if (!data.ok) throw new Error(JSON.stringify(data));
-
-    sendBtn.textContent = "✅ Отправлено";
-  } catch (e) {
-    errorBox.textContent = "❌ TG НЕ РАБОТАЕТ: " + e.message;
-    sendBtn.textContent = "📤 ОТПРАВИТЬ В TG";
-    sendBtn.disabled = false;
-  }
-};
-
-};
+sendBtn.addEventListener("click", () => {
+  alert("TG подключим следующим шагом 😎\n\nНик: " + currentNick);
+});
 </script>
 </body>
 </html>
-
 
