@@ -7,30 +7,33 @@
 
 <style>
 body {
-  margin:0;
-  background:#0f0f14;
-  color:#fff;
-  font-family:Inter,system-ui;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  min-height:100vh;
+  margin: 0;
+  background: #0f0f14;
+  color: #fff;
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
 }
+
 .app {
-  width:360px;
-  text-align:center;
+  width: 360px;
+  text-align: center;
 }
+
 .wheel-wrap {
-  position:relative;
-  width:260px;
-  height:260px;
-  margin:20px auto;
+  position: relative;
+  width: 260px;
+  height: 260px;
+  margin: 20px auto;
 }
+
 .wheel {
-  width:100%;
-  height:100%;
-  border-radius:50%;
-  background:conic-gradient(
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: conic-gradient(
     #ff4d6d 0deg 60deg,
     #fca311 60deg 120deg,
     #2ec4b6 120deg 180deg,
@@ -38,43 +41,51 @@ body {
     #ffbe0b 240deg 300deg,
     #ff4d6d 300deg 360deg
   );
-  transition:transform 4s cubic-bezier(.17,.67,.12,.99);
+  transition: transform 4s cubic-bezier(.17,.67,.12,.99);
 }
+
 .pointer {
-  position:absolute;
-  top:-12px;
-  left:50%;
-  transform:translateX(-50%);
-  border-left:12px solid transparent;
-  border-right:12px solid transparent;
-  border-bottom:20px solid red;
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 12px solid transparent;
+  border-right: 12px solid transparent;
+  border-bottom: 20px solid red;
 }
+
 button {
-  width:100%;
-  padding:14px;
-  margin-top:10px;
-  border:none;
-  border-radius:14px;
-  font-weight:700;
-  cursor:pointer;
+  width: 100%;
+  padding: 14px;
+  margin-top: 10px;
+  border: none;
+  border-radius: 14px;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
 }
+
 .spin {
-  background:#ff4d6d;
-  color:#fff;
+  background: #ff4d6d;
+  color: #fff;
 }
+
 .send {
-  background:#229ED9;
-  color:#fff;
-  display:none;
+  background: #229ED9;
+  color: #fff;
+  display: none;
 }
+
 .result {
-  font-size:20px;
-  margin-top:15px;
-  min-height:28px;
+  font-size: 20px;
+  margin-top: 15px;
+  min-height: 28px;
 }
+
 .error {
-  color:#ff6b6b;
-  font-size:14px;
+  color: #ff6b6b;
+  font-size: 14px;
+  margin-top: 8px;
 }
 </style>
 </head>
@@ -91,7 +102,7 @@ button {
   <div id="result" class="result">—</div>
   <div id="error" class="error"></div>
 
-  <button class="spin" id="spin">КРУТИТЬ</button>
+  <button class="spin" id="spin">🎰 КРУТИТЬ</button>
   <button class="send" id="send">📤 ОТПРАВИТЬ В TG</button>
 </div>
 
@@ -116,6 +127,8 @@ let currentNick = "";
 document.getElementById("spin").onclick = () => {
   errorBox.textContent = "";
   sendBtn.style.display = "none";
+  sendBtn.disabled = false;
+  sendBtn.textContent = "📤 ОТПРАВИТЬ В TG";
 
   const index = Math.floor(Math.random() * nicks.length);
   currentNick = nicks[index];
@@ -133,6 +146,8 @@ document.getElementById("spin").onclick = () => {
 };
 
 sendBtn.onclick = async () => {
+  if (!currentNick) return;
+
   sendBtn.disabled = true;
   sendBtn.textContent = "Отправка...";
 
@@ -140,12 +155,16 @@ sendBtn.onclick = async () => {
     const res = await fetch("/api/send", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ nick: currentNick })
+      body: JSON.stringify({
+        text: "🎰 Выпал ник:\n" + currentNick
+      })
     });
 
     const data = await res.json();
 
-    if (!data.ok) throw new Error(JSON.stringify(data));
+    if (!data.ok) {
+      throw new Error(data.description || "TG error");
+    }
 
     sendBtn.textContent = "✅ Отправлено";
 
@@ -158,3 +177,4 @@ sendBtn.onclick = async () => {
 </script>
 </body>
 </html>
+
