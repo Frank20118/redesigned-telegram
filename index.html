@@ -166,15 +166,37 @@ sendBtn.onclick = async () => {
       throw new Error(data.description || "TG error");
     }
 
-    sendBtn.textContent = "✅ Отправлено";
+    sendBtn.onclick = async () => {
+  if (!currentNick) {
+    errorBox.textContent = "❌ Сначала крутаните рулетку";
+    return;
+  }
 
+  sendBtn.disabled = true;
+  sendBtn.textContent = "Отправка...";
+
+  try {
+    const res = await fetch("/api/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nick: currentNick })
+    });
+
+    const data = await res.json();
+
+    if (!data.ok) throw new Error(JSON.stringify(data));
+
+    sendBtn.textContent = "✅ Отправлено";
   } catch (e) {
     errorBox.textContent = "❌ TG НЕ РАБОТАЕТ: " + e.message;
     sendBtn.textContent = "📤 ОТПРАВИТЬ В TG";
     sendBtn.disabled = false;
   }
 };
+
+};
 </script>
 </body>
 </html>
+
 
